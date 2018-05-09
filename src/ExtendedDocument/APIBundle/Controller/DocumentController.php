@@ -27,7 +27,7 @@ class DocumentController extends Controller
         //Copie du fichier sur le serveur :
 
         //On récupére le fichier
-        $file = $request->files->get('document');
+        $file = $request->files->get('link');
 
         if (!$file->isValid()){
             return new Response($file->getErrorMessage(), Response::HTTP_BAD_REQUEST);
@@ -54,6 +54,8 @@ class DocumentController extends Controller
                 $newMetadata->$methodSet($request->get($fieldName,null));
             }
         }
+
+        $newMetadata->setLink($filename);
 
         //Visualization CREATION
 
