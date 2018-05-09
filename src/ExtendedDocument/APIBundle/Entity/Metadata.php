@@ -1,0 +1,310 @@
+<?php
+
+namespace ExtendedDocument\APIBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+use JsonSerializable;
+
+/**
+ * Metadata
+ *
+ * @ORM\Table(name="metadata")
+ * @ORM\Entity(repositoryClass="ExtendedDocument\APIBundle\Repository\MetadataRepository")
+ */
+class Metadata implements JsonSerializable
+{
+
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    private $id;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="title", type="string", length=255)
+     */
+    private $title;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="subject", type="string", length=255)
+     */
+    private $subject;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="description", type="string", length=255)
+     */
+    private $description;
+
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(name="refDate", type="date")
+     */
+    private $refDate;
+
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(name="publicationDate", type="date")
+     */
+    private $publicationDate;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="type", type="string", length=255)
+     */
+    private $type;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="link", type="string", length=255, nullable=true)
+     */
+    private $link;
+
+    /**
+    * @ORM\OneToOne(targetEntity="Document", mappedBy="id")
+    */
+    private $document;
+
+
+    /**
+     * Get id
+     *
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Set title
+     *
+     * @param string $title
+     *
+     * @return Metadata
+     */
+    public function setTitle($title)
+    {
+        $this->title = $title;
+
+        return $this;
+    }
+
+    /**
+     * Get title
+     *
+     * @return string
+     */
+    public function getTitle()
+    {
+        return $this->title;
+    }
+
+    /**
+     * Set subject
+     *
+     * @param string $subject
+     *
+     * @return Metadata
+     */
+    public function setSubject($subject)
+    {
+        $this->subject = $subject;
+
+        return $this;
+    }
+
+    /**
+     * Get subject
+     *
+     * @return string
+     */
+    public function getSubject()
+    {
+        return $this->subject;
+    }
+
+    /**
+     * Set description
+     *
+     * @param string $description
+     *
+     * @return Metadata
+     */
+    public function setDescription($description)
+    {
+        $this->description = $description;
+
+        return $this;
+    }
+
+    /**
+     * Get description
+     *
+     * @return string
+     */
+    public function getDescription()
+    {
+        return $this->description;
+    }
+
+    /**
+     * Set refDate
+     *
+     * @param \DateTime $refDate
+     *
+     * @return Metadata
+     */
+    public function setRefDate($refDate)
+    {
+        $this->refDate = \DateTime::createFromFormat('Y-m-j',$refDate);
+
+        return $this;
+    }
+
+    /**
+     * Get refDate
+     *
+     * @return \DateTime
+     */
+    public function getRefDate()
+    {
+        return $this->refDate;
+    }
+
+    /**
+     * Set publicationDate
+     *
+     * @param \DateTime $publicationDate
+     *
+     * @return Metadata
+     */
+    public function setPublicationDate($publicationDate)
+    {
+        $this->publicationDate = \DateTime::createFromFormat('Y-m-j',$publicationDate);
+
+        return $this;
+    }
+
+    /**
+     * Get publicationDate
+     *
+     * @return \DateTime
+     */
+    public function getPublicationDate()
+    {
+        return $this->publicationDate;
+    }
+
+    /**
+     * Set type
+     *
+     * @param string $type
+     *
+     * @return Metadata
+     */
+    public function setType($type)
+    {
+        $this->type = $type;
+
+        return $this;
+    }
+
+    /**
+     * Get type
+     *
+     * @return string
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
+     * Set link
+     *
+     * @param string $link
+     *
+     * @return Metadata
+     */
+    public function setLink($link)
+    {
+        $this->link = $link;
+
+        return $this;
+    }
+
+    /**
+     * Get link
+     *
+     * @return string
+     */
+    public function getLink()
+    {
+        return $this->link;
+    }
+
+    /**
+     * Set document
+     *
+     * @param \ExtendedDocument\APIBundle\Entity\Document $document
+     *
+     * @return Metadata
+     */
+    public function setDocument(\ExtendedDocument\APIBundle\Entity\Document $document = null)
+    {
+        $this->document = $document;
+
+        return $this;
+    }
+
+    /**
+     * Get document
+     *
+     * @return \ExtendedDocument\APIBundle\Entity\Document
+     */
+    public function getDocument()
+    {
+        return $this->document;
+    }
+
+    /**
+     * Specify data which should be serialized to JSON
+     * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
+     * @return mixed data which can be serialized by <b>json_encode</b>,
+     * which is a value of any type other than a resource.
+     * @since 5.4.0
+     */
+    public function jsonSerialize()
+    {
+        $arrayJson = array();
+        foreach ($this as $key =>$value){
+            $arrayJson[$key] = $value;
+        }
+        return $arrayJson;
+    }
+
+    /**
+     * Metadata constructor.
+     * @param string $title
+     * @param string $subject
+     * @param string $description
+     * @param \DateTime $refDate
+     * @param \DateTime $publicationDate
+     * @param string $type
+     * @param string $link
+     */
+}

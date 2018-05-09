@@ -1,0 +1,4 @@
+services:
+#    extended_document_api.example:
+#        class: ExtendedDocument\APIBundle\Example
+#        arguments: ["@service_id", "plain_value", "%parameter%"]

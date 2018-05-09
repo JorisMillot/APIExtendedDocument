@@ -1,0 +1,68 @@
+<?php
+
+namespace ExtendedDocument\APIBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+
+/**
+ * Document
+ *
+ * @ORM\Table(name="document")
+ * @ORM\Entity(repositoryClass="ExtendedDocument\APIBundle\Repository\DocumentRepository")
+ */
+class Document
+{
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    private $id;
+
+
+    /**
+     * Get id
+     *
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * @ORM\OneToOne(targetEntity="Metadata", inversedBy="document")
+     */
+    private $metadata;
+
+    /**
+     * @ORM\OneToOne(targetEntity="Visualization", inversedBy="document")
+     */
+    private $visualization;
+
+    /**
+     * Set metadata
+     *
+     * @param \ExtendedDocument\APIBundle\Entity\Metadata $metadata
+     *
+     * @return Document
+     */
+    public function setMetadata(\ExtendedDocument\APIBundle\Entity\Metadata $metadata = null)
+    {
+        $this->metadata = $metadata;
+
+        return $this;
+    }
+
+    /**
+     * Get metadata
+     *
+     * @return \ExtendedDocument\APIBundle\Entity\Metadata
+     */
+    public function getMetadata()
+    {
+        return $this->metadata;
+    }
+}

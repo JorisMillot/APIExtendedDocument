@@ -1,0 +1,7 @@
+extended_document_api_homepage:
+    path:     /
+    defaults: { _controller: ExtendedDocumentAPIBundle:Default:index }
+
+addDocument:
+    path:     /addDocument
+    defaults: { _controller: ExtendedDocumentAPIBundle:Document:addDocument }
