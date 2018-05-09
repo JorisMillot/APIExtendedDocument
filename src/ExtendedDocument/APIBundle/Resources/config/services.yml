@@ -2,3 +2,6 @@ services:
 #    extended_document_api.example:
 #        class: ExtendedDocument\APIBundle\Example
 #        arguments: ["@service_id", "plain_value", "%parameter%"]
+
+parameters:
+    document_directory: '%kernel.project_dir%/web/documentsDirectory'

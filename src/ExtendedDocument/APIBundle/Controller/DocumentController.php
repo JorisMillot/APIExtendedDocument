@@ -24,6 +24,23 @@ class DocumentController extends Controller
         $metadata = $em->getClassMetadata('ExtendedDocument\APIBundle\Entity\Metadata');
         //$isRequired = !$metadata->isNullable("description");
 
+        //Copie du fichier sur le serveur :
+
+        //On récupére le fichier
+        $file = $request->files->get('document');
+
+        if (!$file->isValid()){
+            return new Response($file->getErrorMessage(), Response::HTTP_BAD_REQUEST);
+        }else {
+            //On génére une clé unique pour le fichier
+            $filekey = md5(uniqid(rand(), true));
+            //On y ajoute l'extention
+            $filename = $filekey . '.' . $file->guessExtension();
+
+            //Copie du fichier sur le serveur
+            $file->move($this->getParameter('document_directory'),$filename);
+        }
+
         //METADATA CREATION
         $newMetadata = new Metadata();
 
