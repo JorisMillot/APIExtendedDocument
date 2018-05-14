@@ -151,4 +151,54 @@ class DocumentController extends Controller
 
         return new Response('OK');
     }
+
+    //Only for developpement
+    public function displayDocumentsAction(Request $request){
+        $em = $this->getDoctrine()->getManager();
+        $documentRepository = $em->getRepository('ExtendedDocument\APIBundle\Entity\Document');
+
+        $documents = $documentRepository->findAll();
+
+        $html = '<style>table, th, td {
+    border: 1px solid black;
+}</style>';
+
+        $html.='<table><thead><td>IdDocument</td>';
+
+        $metadataMetadata = $em->getClassMetadata('ExtendedDocument\APIBundle\Entity\Metadata');
+
+        foreach ($metadataMetadata->getFieldNames() as $key =>$value){
+            if($value != 'id' && $value != 'document')
+                $html.='<td>'.$value.'</td>';
+        }
+
+        $metadataVisualization = $em->getClassMetadata('ExtendedDocument\APIBundle\Entity\Visualization');
+
+        foreach ($metadataVisualization->getFieldNames() as $key =>$value){
+            if($value != 'id' && $value != 'document')
+                $html.='<td>'.$value.'</td>';
+        }
+
+        $html.='</thead>';
+
+        foreach ($documents as $document){
+            $html.= "<tr>";
+            $html.="<td>".$document->getId()."</td>";
+            foreach ($document->getMetadata()->jsonSerialize() as $keyMD => $valueMD ){
+                if($keyMD != 'id' && $keyMD != 'document'){
+                    $html.= '<td>'.$valueMD.'</td>';
+                }
+            }
+            foreach ($document->getVisualization()->jsonSerialize() as $keyMD => $valueMD ){
+                if($keyMD != 'id' && $keyMD != 'document'){
+                    $html.= '<td>'.$valueMD.'</td>';
+                }
+            }
+            $html.= "</tr>";
+        }
+
+        $html.= '</table>';
+
+        return new Response($html);
+    }
 }

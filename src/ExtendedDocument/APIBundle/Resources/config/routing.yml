@@ -13,3 +13,7 @@ editDocument:
 deleteDocument:
     path:     /deleteDocument/{idDocument}
     defaults: { _controller: ExtendedDocumentAPIBundle:Document:deleteDocument }
+
+displayDocuments:
+    path:     /displayDocuments
+    defaults: { _controller: ExtendedDocumentAPIBundle:Document:displayDocuments }
