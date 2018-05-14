@@ -160,8 +160,22 @@ class DocumentController extends Controller
         if(($document = $documentRepository->find($idDocument,null)) == null){
             return new Response('Error : unknown document',Response::HTTP_NOT_FOUND);
         }else{
-            return new Response(json_encode($document));
+            $response = new Response(json_encode($document));
+            $response->headers->set('Content-Type', 'application/json');
+            return $response;
         }
+    }
+
+    public function getDocumentsAction(Request $request){
+        $em = $this->getDoctrine()->getManager();
+        $documentRepository = $em->getRepository('ExtendedDocument\APIBundle\Entity\Document');
+
+        //We check if the document exists.
+        $documents = $documentRepository->findAll();
+
+        $response = new Response(json_encode($documents));
+        $response->headers->set('Content-Type', 'application/json');
+        return $response;
     }
 
     //Only for developpement : display the database

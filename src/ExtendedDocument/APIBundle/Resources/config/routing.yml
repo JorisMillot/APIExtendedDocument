@@ -18,6 +18,10 @@ getDocument:
     path:     /getDocument/{idDocument}
     defaults: { _controller: ExtendedDocumentAPIBundle:Document:getDocument }
 
+getDocuments:
+    path:     /getDocuments
+    defaults: { _controller: ExtendedDocumentAPIBundle:Document:getDocuments }
+
 displayDocuments:
     path:     /displayDocuments
     defaults: { _controller: ExtendedDocumentAPIBundle:Document:displayDocuments }
