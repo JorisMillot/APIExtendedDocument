@@ -91,7 +91,9 @@ class DocumentController extends Controller
 
         $em->flush();
 
-        return new Response(json_encode($newDocument));
+        //return new Response(json_encode($newDocument));
+
+        return new Response($newDocument->getId());
 
         //return new Response(var_dump(array_keys((array)$newDocument->getMetadata())));
     }
