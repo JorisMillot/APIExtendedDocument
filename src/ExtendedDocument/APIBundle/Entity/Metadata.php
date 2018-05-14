@@ -302,14 +302,15 @@ class Metadata implements JsonSerializable
             /*$getter = 'get'.ucfirst($key);
 
             $arrayJson[$key] = $this->$getter();*/
+            if($key != 'document'){
+                $getter = 'get'.ucfirst($key);
 
-            $getter = 'get'.ucfirst($key);
+                $arrayJson[$key] = $this->$getter();
 
-            $arrayJson[$key] = $this->$getter();
-
-            if(gettype($value) == 'object' && get_class($value) == \DateTime::class){
-                //If it's a DateTime object, we only want the date formated in the following format :
-                $arrayJson[$key] = $value->format('Y-m-j');
+                if(gettype($value) == 'object' && get_class($value) == \DateTime::class){
+                    //If it's a DateTime object, we only want the date formated in the following format :
+                    $arrayJson[$key] = $value->format('Y-m-j');
+                }
             }
         }
         return $arrayJson;

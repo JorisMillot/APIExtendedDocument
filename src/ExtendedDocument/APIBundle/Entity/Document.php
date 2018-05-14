@@ -101,8 +101,9 @@ class Document implements JsonSerializable
     public function jsonSerialize()
     {
         return [
-          'Metadata' => $this->getMetadata()->jsonSerialize(),
-          'Visualization' => $this->getVisualization()->jsonSerialize()
+            'idDocument' => $this->getId(),
+          'metadata' => $this->getMetadata()->jsonSerialize(),
+          'visualization' => $this->getVisualization()->jsonSerialize()
         ];
     }
 }

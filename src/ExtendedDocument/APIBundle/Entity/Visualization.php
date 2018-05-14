@@ -290,7 +290,8 @@ class Visualization implements JsonSerializable
     {
         $arrayJson = array();
         foreach ($this as $key =>$value){
-            $arrayJson[$key] = $value;
+            if($key != 'document')
+                $arrayJson[$key] = $value;
         }
         return $arrayJson;
     }

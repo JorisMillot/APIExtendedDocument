@@ -152,7 +152,19 @@ class DocumentController extends Controller
         return new Response('OK');
     }
 
-    //Only for developpement
+    public function getDocumentAction(Request $request, $idDocument){
+        $em = $this->getDoctrine()->getManager();
+        $documentRepository = $em->getRepository('ExtendedDocument\APIBundle\Entity\Document');
+
+        //We check if the document exists.
+        if(($document = $documentRepository->find($idDocument,null)) == null){
+            return new Response('Error : unknown document',Response::HTTP_NOT_FOUND);
+        }else{
+            return new Response(json_encode($document));
+        }
+    }
+
+    //Only for developpement : display the database
     public function displayDocumentsAction(Request $request){
         $em = $this->getDoctrine()->getManager();
         $documentRepository = $em->getRepository('ExtendedDocument\APIBundle\Entity\Document');
