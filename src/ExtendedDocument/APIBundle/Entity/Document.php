@@ -20,7 +20,7 @@ class Document implements JsonSerializable
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
      */
-    private $id;
+    protected $id;
 
 
     /**
@@ -34,12 +34,12 @@ class Document implements JsonSerializable
     }
 
     /**
-     * @ORM\OneToOne(targetEntity="Metadata", inversedBy="document")
+     * @ORM\OneToOne(targetEntity="Metadata", inversedBy="document", fetch="EAGER")
      */
     private $metadata;
 
     /**
-     * @ORM\OneToOne(targetEntity="Visualization", inversedBy="document")
+     * @ORM\OneToOne(targetEntity="Visualization", inversedBy="document", fetch="EAGER")
      */
     private $visualization;
 

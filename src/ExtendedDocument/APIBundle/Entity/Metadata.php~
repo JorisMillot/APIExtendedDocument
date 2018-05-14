@@ -78,6 +78,13 @@ class Metadata implements JsonSerializable
     */
     private $document;
 
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="originalName", type="string", length=255, nullable=true)
+     */
+    private $originalName;
+
 
     /**
      * Get id
@@ -290,15 +297,25 @@ class Metadata implements JsonSerializable
      */
     public function jsonSerialize()
     {
-        return [
-            'title' => $this->title,
-            'subject' => $this->subject,
-            'description' =>$this->description,
-            'refDate' => $this->refDate,
-            'publicationDate' => $this->publicationDate,
-            'type' => $this->type,
-            'link' => $this->link
-        ];
+        $arrayJson = array();
+        foreach ($this as $key =>$value){
+            /*$getter = 'get'.ucfirst($key);
+
+            $arrayJson[$key] = $this->$getter();*/
+
+            //echo get_class($value);
+
+            if(gettype($value) == 'Object'){
+                echo get_class($value);
+            }
+
+            if(gettype($value) == 'Object' && get_class($value) == \DateTime::class){
+                echo 'date !';
+            }
+            $getter = 'get'.ucfirst($key);
+            $arrayJson[$key] = $this->$getter();
+        }
+        return $arrayJson;
     }
 
     /**
@@ -311,4 +328,28 @@ class Metadata implements JsonSerializable
      * @param string $type
      * @param string $link
      */
+
+    /**
+     * Set originalName
+     *
+     * @param string $originalName
+     *
+     * @return Metadata
+     */
+    public function setOriginalName($originalName)
+    {
+        $this->originalName = $originalName;
+
+        return $this;
+    }
+
+    /**
+     * Get originalName
+     *
+     * @return string
+     */
+    public function getOriginalName()
+    {
+        return $this->originalName;
+    }
 }

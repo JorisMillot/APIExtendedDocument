@@ -78,6 +78,13 @@ class Metadata implements JsonSerializable
     */
     private $document;
 
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="originalName", type="string", length=255, nullable=true)
+     */
+    private $originalName;
+
 
     /**
      * Get id
@@ -292,7 +299,18 @@ class Metadata implements JsonSerializable
     {
         $arrayJson = array();
         foreach ($this as $key =>$value){
-            $arrayJson[$key] = $value;
+            /*$getter = 'get'.ucfirst($key);
+
+            $arrayJson[$key] = $this->$getter();*/
+
+            $getter = 'get'.ucfirst($key);
+
+            $arrayJson[$key] = $this->$getter();
+
+            if(gettype($value) == 'object' && get_class($value) == \DateTime::class){
+                //If it's a DateTime object, we only want the date formated in the following format :
+                $arrayJson[$key] = $value->format('Y-m-j');
+            }
         }
         return $arrayJson;
     }
@@ -307,4 +325,28 @@ class Metadata implements JsonSerializable
      * @param string $type
      * @param string $link
      */
+
+    /**
+     * Set originalName
+     *
+     * @param string $originalName
+     *
+     * @return Metadata
+     */
+    public function setOriginalName($originalName)
+    {
+        $this->originalName = $originalName;
+
+        return $this;
+    }
+
+    /**
+     * Get originalName
+     *
+     * @return string
+     */
+    public function getOriginalName()
+    {
+        return $this->originalName;
+    }
 }

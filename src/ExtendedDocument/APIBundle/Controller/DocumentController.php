@@ -29,13 +29,18 @@ class DocumentController extends Controller
         //On récupére le fichier
         $file = $request->files->get('link');
 
+        if(!isset($file)){
+            return new Response('Error : no file given', Response::HTTP_BAD_REQUEST);
+        }
         if (!$file->isValid()){
             return new Response($file->getErrorMessage(), Response::HTTP_BAD_REQUEST);
         }else {
+            $originalName = $file->getClientOriginalName();
+
             //On génére une clé unique pour le fichier
             $filekey = md5(uniqid(rand(), true));
             //On y ajoute l'extention
-            $filename = $filekey . '.' . $file->guessExtension();
+            $filename = $filekey . '.' . $file->getClientOriginalExtension();
 
             //Copie du fichier sur le serveur
             $file->move($this->getParameter('document_directory'),$filename);
@@ -56,6 +61,7 @@ class DocumentController extends Controller
         }
 
         $newMetadata->setLink($filename);
+        $newMetadata->setOriginalName($originalName);
 
         //Visualization CREATION
 
@@ -88,5 +94,59 @@ class DocumentController extends Controller
         return new Response(json_encode($newDocument));
 
         //return new Response(var_dump(array_keys((array)$newDocument->getMetadata())));
+    }
+
+    public function editDocumentAction(Request $request, $idDocument){
+        $em = $this->getDoctrine()->getManager();
+        $documentRepository = $em->getRepository('ExtendedDocument\APIBundle\Entity\Document');
+
+        //We check if the document exists.
+        if(($document = $documentRepository->find($idDocument,null)) == null){
+            return new Response('Error : unknown document',Response::HTTP_NOT_FOUND);
+        }
+
+        //Metadata edition
+        $metadata = $em->getClassMetadata('ExtendedDocument\APIBundle\Entity\Metadata');
+
+        foreach ($metadata->getFieldNames() as $key => $fieldName){
+            //If the field is provided by the request we edit it
+            if($fieldName != 'id' && $request->get($fieldName,null) != null){
+                $methodSet = 'set'.ucfirst($fieldName); //contains the name of the method to call for each field
+                $document->getMetadata()->$methodSet($request->get($fieldName,null));
+            }
+        }
+
+        //Visualization edition
+
+        $metadata = $em->getClassMetadata('ExtendedDocument\APIBundle\Entity\Visualization');
+
+        foreach ($metadata->getFieldNames() as $key => $fieldName){
+            //If the field is provided by the request we edit it
+            if($fieldName != 'id' && $request->get($fieldName,null) != null){
+                $methodSet = 'set'.ucfirst($fieldName); //contains the name of the method to call for each field
+                $document->getVisualization()->$methodSet($request->get($fieldName,null));
+            }
+        }
+        $em->flush();
+
+
+        return new Response('OK');
+    }
+
+    public function deleteDocumentAction(Request $request, $idDocument){
+        $em = $this->getDoctrine()->getManager();
+        $documentRepository = $em->getRepository('ExtendedDocument\APIBundle\Entity\Document');
+
+        //We check if the document exists.
+        if(($document = $documentRepository->find($idDocument,null)) == null){
+            return new Response('Error : unknown document',Response::HTTP_NOT_FOUND);
+        }
+        $em->remove($document->getMetadata());
+        $em->remove($document->getVisualization());
+        $em->remove($document);
+        $em->flush();
+
+
+        return new Response('OK');
     }
 }

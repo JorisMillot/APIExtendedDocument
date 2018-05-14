@@ -5,3 +5,11 @@ extended_document_api_homepage:
 addDocument:
     path:     /addDocument
     defaults: { _controller: ExtendedDocumentAPIBundle:Document:addDocument }
+
+editDocument:
+    path:     /editDocument/{idDocument}
+    defaults: { _controller: ExtendedDocumentAPIBundle:Document:editDocument }
+
+deleteDocument:
+    path:     /deleteDocument/{idDocument}
+    defaults: { _controller: ExtendedDocumentAPIBundle:Document:deleteDocument }
