@@ -178,6 +178,138 @@ class DocumentController extends Controller
         return $response;
     }
 
+    public function getDocumentsByRadiusAction(Request $request, $radius, $x, $y, $limit){
+        $em = $this->getDoctrine()->getManager();
+        $documentRepository = $em->getRepository('ExtendedDocument\APIBundle\Entity\Document');
+
+        //We check if the document exists.
+        $documents = $documentRepository->findAll();
+
+        /*$sql = "SELECT ST_Distance(
+		ST_GeomFromText('POINT(-72.1235 42.3521)'),
+		ST_GeomFromText('POINT($x $y)')
+	)";
+
+        $stmt = $em->getConnection()->prepare($sql);
+        $stmt->execute();
+        var_dump($stmt->fetchAll());
+
+
+        */
+
+        $documentsByDistance = array();
+
+        foreach ($documents as $document) {
+            if ($document->getVisualization()->getPositionX() != null &&
+                $document->getVisualization()->getPositionY() != null &&
+                ($distance = $this->distance($x, $y, $document->getVisualization()->getPositionX(), $document->getVisualization()->getPositionY())) <= $radius) {
+                array_push($documentsByDistance, ['document' => $document, 'distance' => $distance]);
+            }
+        }
+
+        //var_dump($documentsByDistance);
+
+        //Sort the document by the distance from the provided point
+        uasort($documentsByDistance, "ExtendedDocument\APIBundle\Controller\DocumentController::sortByDistance");
+
+        //var_dump($documentsByDistance);
+
+        $result = array();
+
+        foreach ($documentsByDistance as $document){
+            if (round($limit,0,PHP_ROUND_HALF_DOWN) == 0){
+                $response = new Response(json_encode($result));
+                $response->headers->set('Content-Type', 'application/json');
+                return $response;
+            }
+            array_push($result,$document['document']);
+            $limit--;
+        }
+
+        $response = new Response(json_encode($result));
+        $response->headers->set('Content-Type', 'application/json');
+        return $response;
+    }
+
+    public function sortByDistance($var1, $var2){
+        if($var1['distance'] == $var2['distance'])
+            return 0;
+        return $var1['distance'] > $var2['distance'];
+    }
+
+    /**
+     * @param $x1 double
+     * @param $y1 double
+     * @param $x2 double
+     * @param $y2 double
+     * @return double
+     */
+    public function distance($x1,$y1,$x2,$y2){ //prendre en compte la courbure de la terre mais quelles sont les unités utilisée ?
+        $x = ( pow($x2,2) - pow($x1,2));
+        $y = ( pow($y2,2) - pow($y1,2));
+
+        return ( sqrt(abs($x + $y)) );
+    }
+
+    public function getDocumentsByDateAction(Request $request, $type, $date1, $date2){
+        $em = $this->getDoctrine()->getManager();
+        $metadata = $em->getClassMetadata('ExtendedDocument\APIBundle\Entity\Metadata');
+
+        if(!array_search($type,$metadata->getFieldNames())){
+            return new Response("Error : type provided doesn't exists", Response::HTTP_BAD_REQUEST);
+        }else{
+            if($metadata->getTypeOfField($type) != 'date'){
+                return new Response("Error : type provided isn't a date", Response::HTTP_BAD_REQUEST);
+            }
+
+            if(!isset($date2)){
+                $qb = $em->createQueryBuilder();
+                $qb->select('d,m,v')
+                    ->from('ExtendedDocument\APIBundle\Entity\Document', 'd')
+                    ->innerJoin('d.metadata','m')
+                    ->innerJoin('d.visualization','v')
+                    ->where(
+                        $qb->expr()->andX(
+                            $qb->expr()->eq("m.".$type,'\''.$date1.'\'')
+                        )
+                    );
+            }else{
+                $qb = $em->createQueryBuilder();
+                $qb->select('d,m,v')
+                    ->from('ExtendedDocument\APIBundle\Entity\Document', 'd')
+                    ->innerJoin('d.metadata','m')
+                    ->innerJoin('d.visualization','v')
+                    ->where(
+                        $qb->expr()->andX(
+                            $qb->expr()->lte("m.".$type,'\''.$date2.'\''),
+                            $qb->expr()->gte("m.".$type,'\''.$date1.'\'')
+                        )
+                    )
+                    ->orderBy("m.".$type);
+            }
+
+            $response = $qb->getQuery()->getResult();
+
+            return new Response(json_encode($response));
+        }
+    }
+
+    /*public function getAuthoritativeSportsRecords()
+{
+    $sql = "
+        SELECT name,
+               event_type,
+               sport_type,
+               level
+          FROM vnn_sport
+    ";
+
+    $em = $this->getDoctrine()->getManager();
+    $stmt = $em->getConnection()->prepare($sql);
+    $stmt->execute();
+    return $stmt->fetchAll();
+}   */
+
     //Only for developpement : display the database
     public function displayDocumentsAction(Request $request){
         $em = $this->getDoctrine()->getManager();

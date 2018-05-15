@@ -22,6 +22,14 @@ getDocuments:
     path:     /getDocuments
     defaults: { _controller: ExtendedDocumentAPIBundle:Document:getDocuments }
 
+getDocumentsByRadius:
+    path:     /getDocumentsByRadius/{x}/{y}/{radius}/{limit}
+    defaults: { _controller: ExtendedDocumentAPIBundle:Document:getDocumentsByRadius, x:0, y:0, limit:-1, radius:-1}
+
+getDocumentsByDate:
+    path:     /getDocumentsByDate/{type}/{date1}/{date2}
+    defaults: { _controller: ExtendedDocumentAPIBundle:Document:getDocumentsByDate, date2:null}
+
 displayDocuments:
     path:     /displayDocuments
     defaults: { _controller: ExtendedDocumentAPIBundle:Document:displayDocuments }

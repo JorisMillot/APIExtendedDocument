@@ -10,4 +10,12 @@ namespace ExtendedDocument\APIBundle\Repository;
  */
 class DocumentRepository extends \Doctrine\ORM\EntityRepository
 {
+    /*public function getDocumentsByDate($type)
+    {
+        return $this->_em->createQuery('
+SELECT d
+FROM ExtendedDocument\APIBundle\Model\Document d
+')
+            ->getResult();
+    }*/
 }
