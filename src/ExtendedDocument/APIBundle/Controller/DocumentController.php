@@ -170,8 +170,85 @@ class DocumentController extends Controller
         $em = $this->getDoctrine()->getManager();
         $documentRepository = $em->getRepository('ExtendedDocument\APIBundle\Entity\Document');
 
-        //We check if the document exists.
-        $documents = $documentRepository->findAll();
+        if(($date1 = $request->get('date1',null)) != null){ //A date was provided
+            if(($type = $request->get('type',null))==null)
+                return new Response('Error : type of date wasn\'t provided',Response::HTTP_BAD_REQUEST);
+            if(($date2 = $request->get('date2',null))!=null){ //Two date were provided
+                $qb = $em->createQueryBuilder();
+                $qb->select('d,m,v')
+                    ->from('ExtendedDocument\APIBundle\Entity\Document', 'd')
+                    ->innerJoin('d.metadata','m')
+                    ->innerJoin('d.visualization','v')
+                    ->where(
+                        $qb->expr()->andX(
+                            $qb->expr()->lte("m.".$type,'\''.$date2.'\''),
+                            $qb->expr()->gte("m.".$type,'\''.$date1.'\'')
+                        )
+                    )
+                    ->orderBy("m.".$type);
+            }else{
+                $qb = $em->createQueryBuilder();
+                $qb->select('d,m,v')
+                    ->from('ExtendedDocument\APIBundle\Entity\Document', 'd')
+                    ->innerJoin('d.metadata','m')
+                    ->innerJoin('d.visualization','v')
+                    ->where(
+                        $qb->expr()->andX(
+                            $qb->expr()->eq("m.".$type,'\''.$date1.'\'')
+                        )
+                    );
+            }
+            $documents = $qb->getQuery()->getResult();
+        }else{
+            $documents = $documentRepository->findAll();
+        }
+
+        /*if(($x = $request->get('x',null) != null)
+        || ($y = $request->get('y',null) != null)
+        || ($radius = $request->get('radius',null) != null)
+        ){
+            //The user has provided at least one of the parameter to fetch document with a radius
+            //We check if all the parameter are provided
+            if(($x = $request->get('x',null) == null)
+                || ($y = $request->get('y',null) == null)
+                || ($radius = $request->get('radius',null) == null)
+            ){
+                //At least one parameter is missing
+                return new Response('You tried to fetch documents by providing a point and a radius but some parameters are missing.
+                Check the documentation for more informations',Response::HTTP_BAD_REQUEST);
+            }
+
+            $documentsByDistance = array();
+
+            //We check if the documents have x and y coordinates
+            foreach ($documents as $document) {
+                if ($document->getVisualization()->getPositionX() != null &&
+                    $document->getVisualization()->getPositionY() != null &&
+                    ($distance = $this->distance($x, $y, $document->getVisualization()->getPositionX(), $document->getVisualization()->getPositionY())) <= $radius) {
+                    array_push($documentsByDistance, ['document' => $document, 'distance' => $distance]);
+                }
+            }
+
+            //var_dump($documentsByDistance);
+
+            //Sort the document by the distance from the provided point
+            uasort($documentsByDistance, "ExtendedDocument\APIBundle\Controller\DocumentController::sortByDistance");
+
+            //var_dump($documentsByDistance);
+
+            $result = array();
+
+            foreach ($documentsByDistance as $document){
+                if (round($limit,0,PHP_ROUND_HALF_DOWN) == 0){
+                    $response = new Response(json_encode($result));
+                    $response->headers->set('Content-Type', 'application/json');
+                    return $response;
+                }
+                array_push($result,$document['document']);
+                $limit--;
+            }
+
+        }*/
 
         $response = new Response(json_encode($documents));
         $response->headers->set('Content-Type', 'application/json');
@@ -182,7 +259,6 @@ class DocumentController extends Controller
         $em = $this->getDoctrine()->getManager();
         $documentRepository = $em->getRepository('ExtendedDocument\APIBundle\Entity\Document');
 
-        //We check if the document exists.
         $documents = $documentRepository->findAll();
 
         /*$sql = "SELECT ST_Distance(
