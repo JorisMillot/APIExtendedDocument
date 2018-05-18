@@ -171,7 +171,7 @@ class DocumentController extends Controller
         $documentRepository = $em->getRepository('ExtendedDocument\APIBundle\Entity\Document');
 
         if(($date1 = $request->get('date1',null)) != null){ //A date was provided
-            if(($type = $request->get('type',null))==null)
+            if(($type = $request->get('dateType',null))==null)
                 return new Response('Error : type of date wasn\'t provided',Response::HTTP_BAD_REQUEST);
             if(($date2 = $request->get('date2',null))!=null){ //Two date were provided
                 $qb = $em->createQueryBuilder();
@@ -201,6 +201,15 @@ class DocumentController extends Controller
             $documents = $qb->getQuery()->getResult();
         }else{
             $documents = $documentRepository->findAll();
+        }
+
+        if(($documentType = $request->get('documentType',null))!=null){
+            //A type of document was provided
+            foreach ($documents as $document){
+                if($document->getMetadata()->getType() != $documentType){
+                    unset($documents[array_search($document,$documents)]);
+                }
+            }
         }
 
         /*if(($x = $request->get('x',null) != null)
