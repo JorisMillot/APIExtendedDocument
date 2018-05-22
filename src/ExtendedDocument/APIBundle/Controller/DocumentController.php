@@ -232,7 +232,7 @@ class DocumentController extends Controller
             //A keyword was provided
             $documentsFiltered = array();
             foreach ($documents as $document){
-                if(substr_count($document->getMetadata()->toStringForKeywordFilter(),$documentSubject)>0){
+                if(substr_count($document->getMetadata()->toStringForKeywordFilter(),$keyword)>0){
                     array_push($documentsFiltered,$document);
                 }
             }
