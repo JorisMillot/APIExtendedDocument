@@ -316,6 +316,13 @@ class Metadata implements JsonSerializable
         return $arrayJson;
     }
 
+    public function toStringForKeywordFilter(){
+        return $this->title.' '
+            .$this->description.' '
+            .$this->subject.' '
+            .$this->type;
+    }
+
     /**
      * Metadata constructor.
      * @param string $title

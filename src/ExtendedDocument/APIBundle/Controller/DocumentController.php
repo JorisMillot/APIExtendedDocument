@@ -203,11 +203,36 @@ class DocumentController extends Controller
             $documents = $documentRepository->findAll();
         }
 
+        // Document type filter
         if(($documentType = $request->get('documentType',null))!=null){
             //A type of document was provided
             $documentsFiltered = array();
             foreach ($documents as $document){
                 if($document->getMetadata()->getType() == $documentType){
+                    array_push($documentsFiltered,$document);
+                }
+            }
+            $documents = $documentsFiltered;
+        }
+
+        //Subject filter
+        if(($documentSubject = $request->get('subject',null))!=null){
+            //A subject was provided
+            $documentsFiltered = array();
+            foreach ($documents as $document){
+                if($document->getMetadata()->getSubject() == $documentSubject){
+                    array_push($documentsFiltered,$document);
+                }
+            }
+            $documents = $documentsFiltered;
+        }
+
+        //Subject filter
+        if(($keyword = $request->get('keyword',null))!=null){
+            //A keyword was provided
+            $documentsFiltered = array();
+            foreach ($documents as $document){
+                if(substr_count($document->getMetadata()->toStringForKeywordFilter(),$documentSubject)>0){
                     array_push($documentsFiltered,$document);
                 }
             }
