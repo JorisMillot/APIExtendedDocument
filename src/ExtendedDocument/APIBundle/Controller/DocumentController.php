@@ -199,11 +199,8 @@ class DocumentController extends Controller
                     );
             }
             $documents = $qb->getQuery()->getResult();
-
-            echo "Date";
         }else{
             $documents = $documentRepository->findAll();
-            echo "Pas de date";
         }
 
         if(($documentType = $request->get('documentType',null))!=null){
