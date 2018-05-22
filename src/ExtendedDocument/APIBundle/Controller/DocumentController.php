@@ -199,17 +199,22 @@ class DocumentController extends Controller
                     );
             }
             $documents = $qb->getQuery()->getResult();
+
+            echo "Date";
         }else{
             $documents = $documentRepository->findAll();
+            echo "Pas de date";
         }
 
         if(($documentType = $request->get('documentType',null))!=null){
             //A type of document was provided
+            $documentsFiltered = array();
             foreach ($documents as $document){
-                if($document->getMetadata()->getType() != $documentType){
-                    unset($documents[array_search($document,$documents)]);
+                if($document->getMetadata()->getType() == $documentType){
+                    array_push($documentsFiltered,$document);
                 }
             }
+            $documents = $documentsFiltered;
         }
 
         /*if(($x = $request->get('x',null) != null)
