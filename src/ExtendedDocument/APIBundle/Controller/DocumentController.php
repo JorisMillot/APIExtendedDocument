@@ -170,34 +170,42 @@ class DocumentController extends Controller
         $em = $this->getDoctrine()->getManager();
         $documentRepository = $em->getRepository('ExtendedDocument\APIBundle\Entity\Document');
 
-        if(($date1 = $request->get('date1',null)) != null){ //A date was provided
-            if(($type = $request->get('dateType',null))==null)
-                return new Response('Error : type of date wasn\'t provided',Response::HTTP_BAD_REQUEST);
-            if(($date2 = $request->get('date2',null))!=null){ //Two date were provided
-                $qb = $em->createQueryBuilder();
-                $qb->select('d,m,v')
-                    ->from('ExtendedDocument\APIBundle\Entity\Document', 'd')
-                    ->innerJoin('d.metadata','m')
-                    ->innerJoin('d.visualization','v')
-                    ->where(
-                        $qb->expr()->andX(
-                            $qb->expr()->lte("m.".$type,'\''.$date2.'\''),
-                            $qb->expr()->gte("m.".$type,'\''.$date1.'\'')
-                        )
+        if($request->get('refDate1','0000-01-01') != null ||
+            $request->get('publicationDate1','0000-01-01') != null){
+            //at least one date was provided
+            $qb = $em->createQueryBuilder();
+
+            //reference date
+            $refDate1 = $request->get('refDate1','0001-01-01');
+            if($request->get('refDate1',null) == null)
+                //no publication date was provided
+                $refDate2 = '9999-12-31';
+            else
+                $refDate2 = $request->get('refDate2',$refDate1);
+
+            //publication date
+            $publicationDate1 = $request->get('$publicationDate1','0001-01-01');
+            if($request->get('$publicationDate1',null) == null)
+                //no publication date was provided
+                $publicationDate2 = '9999-12-31';
+            else
+                $publicationDate2 = $request->get('publicationDate2',$refDate1);
+
+            $qb->select('d,m,v')
+                ->from('ExtendedDocument\APIBundle\Entity\Document', 'd')
+                ->innerJoin('d.metadata','m')
+                ->innerJoin('d.visualization','v')
+                ->where(
+                    $qb->expr()->andX(
+                        $qb->expr()->lte("m.refDate",'\''.$refDate2.'\''),
+                        $qb->expr()->gte("m.refDate",'\''.$refDate1.'\''),
+                        $qb->expr()->lte("m.publicationDate",'\''.$publicationDate2.'\''),
+                        $qb->expr()->gte("m.publicationDate",'\''.$publicationDate1.'\'')
                     )
-                    ->orderBy("m.".$type);
-            }else{
-                $qb = $em->createQueryBuilder();
-                $qb->select('d,m,v')
-                    ->from('ExtendedDocument\APIBundle\Entity\Document', 'd')
-                    ->innerJoin('d.metadata','m')
-                    ->innerJoin('d.visualization','v')
-                    ->where(
-                        $qb->expr()->andX(
-                            $qb->expr()->eq("m.".$type,'\''.$date1.'\'')
-                        )
-                    );
-            }
+                )
+                ->orderBy("m.refDate")
+                ->setMaxResults( (int) $request->get('limit',99999) )
+            ;
             $documents = $qb->getQuery()->getResult();
         }else{
             $documents = $documentRepository->findAll();
@@ -227,7 +235,7 @@ class DocumentController extends Controller
             $documents = $documentsFiltered;
         }
 
-        //Subject filter
+        //Keyword filter //Work with only one keywork for now
         if(($keyword = $request->get('keyword',null))!=null){
             //A keyword was provided
             $documentsFiltered = array();
