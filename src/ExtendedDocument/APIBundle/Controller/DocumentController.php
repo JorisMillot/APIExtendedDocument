@@ -24,9 +24,9 @@ class DocumentController extends Controller
         $metadata = $em->getClassMetadata('ExtendedDocument\APIBundle\Entity\Metadata');
         //$isRequired = !$metadata->isNullable("description");
 
-        //Copie du fichier sur le serveur :
+        //Copy the file on the server :
 
-        //On récupére le fichier
+        //We retrieve the file
         $file = $request->files->get('link');
 
         if(!isset($file)){

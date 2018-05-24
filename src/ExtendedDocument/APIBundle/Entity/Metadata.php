@@ -309,7 +309,7 @@ class Metadata implements JsonSerializable
 
                 if(gettype($value) == 'object' && get_class($value) == \DateTime::class){
                     //If it's a DateTime object, we only want the date formated in the following format :
-                    $arrayJson[$key] = $value->format('Y-m-j');
+                    $arrayJson[$key] = $value->format('Y-m-d');
                 }
             }
         }
