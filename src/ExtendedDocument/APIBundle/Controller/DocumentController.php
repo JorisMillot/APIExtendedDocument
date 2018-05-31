@@ -19,83 +19,17 @@ use Symfony\Component\HttpFoundation\Response;
 class DocumentController extends Controller
 {
     public function addDocumentAction(Request $request){
-        //Verification que tous les champs obligatoires sont remplis à partir du schema doctrine :
+
         $em = $this->getDoctrine()->getManager();
-        $metadata = $em->getClassMetadata('ExtendedDocument\APIBundle\Entity\Metadata');
-        //$isRequired = !$metadata->isNullable("description");
-
-        //Copy the file on the server :
-
-        //We retrieve the file
-        $file = $request->files->get('link');
-
-        if(!isset($file)){
-            return new Response('Error : no file given', Response::HTTP_BAD_REQUEST);
-        }
-        if (!$file->isValid()){
-            return new Response($file->getErrorMessage(), Response::HTTP_BAD_REQUEST);
-        }else {
-            $originalName = $file->getClientOriginalName();
-
-            //On génére une clé unique pour le fichier
-            $filekey = md5(uniqid(rand(), true));
-            //On y ajoute l'extention
-            $filename = $filekey . '.' . $file->getClientOriginalExtension();
-
-            //Copie du fichier sur le serveur
-            $file->move($this->getParameter('document_directory'),$filename);
-        }
-
-        //METADATA CREATION
-        $newMetadata = new Metadata();
-
-        foreach ($metadata->getFieldNames() as $key => $fieldName){
-            //If the field is required and the field is not provided we return an error 400 : Bad Request
-            if($fieldName != 'id' && !$metadata->isNullable($fieldName) && $request->get($fieldName,null) == null){
-                return new Response('Error : Some parameters are missings : '.$fieldName,Response::HTTP_BAD_REQUEST);
-            }
-            if($fieldName != 'id'){
-                $methodSet = 'set'.ucfirst($fieldName); //contains the name of the method to call for each field
-                $newMetadata->$methodSet($request->get($fieldName,null));
-            }
-        }
-
-        $newMetadata->setLink($filename);
-        $newMetadata->setOriginalName($originalName);
-
-        //Visualization CREATION
-
-        $newVisualization = new Visualization();
-        $metadata = $em->getClassMetadata('ExtendedDocument\APIBundle\Entity\Visualization');
-
-        foreach ($metadata->getFieldNames() as $key => $fieldName){
-            //If the field is required and the field is not provided we return an error 400 : Bad Request
-            if($fieldName != 'id' && !$metadata->isNullable($fieldName) && $request->get($fieldName,null) == null){
-                return new Response('Error : Some parameters are missings : '.$fieldName,Response::HTTP_BAD_REQUEST);
-            }
-            if($fieldName != 'id'){
-                $methodSet = 'set'.ucfirst($fieldName); //contains the name of the method to call for each field
-                $newVisualization->$methodSet($request->get($fieldName,null));
-            }
-        }
-
-        //DOCUMENTS CREATION
 
         $newDocument = new Document();
-        $newDocument->setMetadata($newMetadata);
-        $newDocument->setVisualization($newVisualization);
+        $newDocument->initEntity($request,$this);
 
-        $em->persist($newMetadata);
-        $em->persist($newVisualization);
         $em->persist($newDocument);
-
         $em->flush();
-
-        //return new Response(json_encode($newDocument));
 
         return new Response($newDocument->getId());
 
-        //return new Response(var_dump(array_keys((array)$newDocument->getMetadata())));
     }
 
     public function editDocumentAction(Request $request, $idDocument){
@@ -107,30 +41,12 @@ class DocumentController extends Controller
             return new Response('Error : unknown document',Response::HTTP_NOT_FOUND);
         }
 
-        //Metadata edition
-        $metadata = $em->getClassMetadata('ExtendedDocument\APIBundle\Entity\Metadata');
+        /**
+         * @var $document Document
+         */
+        $document->editEntity($request, $this);
 
-        foreach ($metadata->getFieldNames() as $key => $fieldName){
-            //If the field is provided by the request we edit it
-            if($fieldName != 'id' && $request->get($fieldName,null) != null){
-                $methodSet = 'set'.ucfirst($fieldName); //contains the name of the method to call for each field
-                $document->getMetadata()->$methodSet($request->get($fieldName,null));
-            }
-        }
-
-        //Visualization edition
-
-        $metadata = $em->getClassMetadata('ExtendedDocument\APIBundle\Entity\Visualization');
-
-        foreach ($metadata->getFieldNames() as $key => $fieldName){
-            //If the field is provided by the request we edit it
-            if($fieldName != 'id' && $request->get($fieldName,null) != null){
-                $methodSet = 'set'.ucfirst($fieldName); //contains the name of the method to call for each field
-                $document->getVisualization()->$methodSet($request->get($fieldName,null));
-            }
-        }
         $em->flush();
-
 
         return new Response('OK');
     }
@@ -247,75 +163,17 @@ class DocumentController extends Controller
             $documents = $documentsFiltered;
         }
 
-        /*if(($x = $request->get('x',null) != null)
-        || ($y = $request->get('y',null) != null)
-        || ($radius = $request->get('radius',null) != null)
-        ){
-            //The user has provided at least one of the parameter to fetch document with a radius
-            //We check if all the parameter are provided
-            if(($x = $request->get('x',null) == null)
-                || ($y = $request->get('y',null) == null)
-                || ($radius = $request->get('radius',null) == null)
-            ){
-                //At least one parameter is missing
-                return new Response('You tried to fetch documents by providing a point and a radius but some parameters are missing.
-                Check the documentation for more informations',Response::HTTP_BAD_REQUEST);
-            }
-
-            $documentsByDistance = array();
-
-            //We check if the documents have x and y coordinates
-            foreach ($documents as $document) {
-                if ($document->getVisualization()->getPositionX() != null &&
-                    $document->getVisualization()->getPositionY() != null &&
-                    ($distance = $this->distance($x, $y, $document->getVisualization()->getPositionX(), $document->getVisualization()->getPositionY())) <= $radius) {
-                    array_push($documentsByDistance, ['document' => $document, 'distance' => $distance]);
-                }
-            }
-
-            //var_dump($documentsByDistance);
-
-            //Sort the document by the distance from the provided point
-            uasort($documentsByDistance, "ExtendedDocument\APIBundle\Controller\DocumentController::sortByDistance");
-
-            //var_dump($documentsByDistance);
-
-            $result = array();
-
-            foreach ($documentsByDistance as $document){
-                if (round($limit,0,PHP_ROUND_HALF_DOWN) == 0){
-                    $response = new Response(json_encode($result));
-                    $response->headers->set('Content-Type', 'application/json');
-                    return $response;
-                }
-                array_push($result,$document['document']);
-                $limit--;
-            }
-
-        }*/
-
         $response = new Response(json_encode($documents));
         $response->headers->set('Content-Type', 'application/json');
         return $response;
     }
 
-    public function getDocumentsByRadiusAction(Request $request, $radius, $x, $y, $limit){
+    /*public function getDocumentsByRadiusAction(Request $request, $radius, $x, $y, $limit){
         $em = $this->getDoctrine()->getManager();
         $documentRepository = $em->getRepository('ExtendedDocument\APIBundle\Entity\Document');
 
         $documents = $documentRepository->findAll();
 
-        /*$sql = "SELECT ST_Distance(
-		ST_GeomFromText('POINT(-72.1235 42.3521)'),
-		ST_GeomFromText('POINT($x $y)')
-	)";
-
-        $stmt = $em->getConnection()->prepare($sql);
-        $stmt->execute();
-        var_dump($stmt->fetchAll());
-
-
-        */
 
         $documentsByDistance = array();
 
@@ -364,7 +222,7 @@ class DocumentController extends Controller
      * @param $y2 double
      * @return double
      */
-    public function distance($x1,$y1,$x2,$y2){ //prendre en compte la courbure de la terre mais quelles sont les unités utilisée ?
+    /*public function distance($x1,$y1,$x2,$y2){ //prendre en compte la courbure de la terre mais quelles sont les unités utilisée ?
         $x = ( pow($x2,2) - pow($x1,2));
         $y = ( pow($y2,2) - pow($y1,2));
 
@@ -412,23 +270,11 @@ class DocumentController extends Controller
 
             return new Response(json_encode($response));
         }
+    }*/
+
+    public function getManager(){
+        return $this->getDoctrine()->getManager();
     }
-
-    /*public function getAuthoritativeSportsRecords()
-{
-    $sql = "
-        SELECT name,
-               event_type,
-               sport_type,
-               level
-          FROM vnn_sport
-    ";
-
-    $em = $this->getDoctrine()->getManager();
-    $stmt = $em->getConnection()->prepare($sql);
-    $stmt->execute();
-    return $stmt->fetchAll();
-}   */
 
     //Only for developpement : display the database
     public function displayDocumentsAction(Request $request){

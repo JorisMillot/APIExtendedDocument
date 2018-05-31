@@ -4,6 +4,10 @@ namespace ExtendedDocument\APIBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use JsonSerializable;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Metadata
@@ -11,10 +15,8 @@ use JsonSerializable;
  * @ORM\Table(name="metadata")
  * @ORM\Entity(repositoryClass="ExtendedDocument\APIBundle\Repository\MetadataRepository")
  */
-class Metadata implements JsonSerializable
+class Metadata implements JsonSerializable, DoctrineEntity
 {
-
-
     /**
      * @var int
      *
@@ -288,6 +290,38 @@ class Metadata implements JsonSerializable
         return $this->document;
     }
 
+    public function toStringForKeywordFilter(){
+        return $this->title.' '
+            .$this->description.' '
+            .$this->subject.' '
+            .$this->type;
+    }
+
+
+    /**
+     * Set originalName
+     *
+     * @param string $originalName
+     *
+     * @return Metadata
+     */
+    public function setOriginalName($originalName)
+    {
+        $this->originalName = $originalName;
+
+        return $this;
+    }
+
+    /**
+     * Get originalName
+     *
+     * @return string
+     */
+    public function getOriginalName()
+    {
+        return $this->originalName;
+    }
+
     /**
      * Specify data which should be serialized to JSON
      * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
@@ -316,45 +350,68 @@ class Metadata implements JsonSerializable
         return $arrayJson;
     }
 
-    public function toStringForKeywordFilter(){
-        return $this->title.' '
-            .$this->description.' '
-            .$this->subject.' '
-            .$this->type;
+    /**
+     * @param $request Request
+     * @param $controller mixed
+     * @return String|int
+     */
+    public function initEntity($request, $controller){
+        if($request == null)
+            return 'Error : request wasn\'t provided';
+
+        //Copy the file on the server :
+
+        //We retrieve the file
+        /**
+         * @var $file UploadedFile
+         */
+        $file = $request->files->get('link');
+
+        if(!isset($file)){
+            return new Response('Error : no file given', Response::HTTP_BAD_REQUEST);
+        }
+        if (!$file->isValid()){
+            return new Response($file->getErrorMessage(), Response::HTTP_BAD_REQUEST);
+        }else {
+            $originalName = $file->getClientOriginalName();
+
+            //On génére une clé unique pour le fichier
+            $filekey = md5(uniqid(rand(), true));
+            //On y ajoute l'extention
+            $filename = $filekey . '.' . $file->getClientOriginalExtension();
+
+            //Copie du fichier sur le serveur
+            $file->move(__DIR__.'../../../../../web/documentsDirectory',$filename);
+            //echo __DIR__.'../../web/documentsDirectory';
+        }
+
+        $metadata = $controller->getManager()->getClassMetadata('ExtendedDocument\APIBundle\Entity\Metadata');
+
+        foreach ($metadata->getFieldNames() as $key => $fieldName){
+            //If the field is required and the field is not provided we return an error 400 : Bad Request
+            if($fieldName != 'id' && !$metadata->isNullable($fieldName) && $request->get($fieldName,null) == null){
+                return 'Error : Some parameters are missings : '.$fieldName;
+            }
+            if($fieldName != 'id'){
+                $methodSet = 'set'.ucfirst($fieldName); //contains the name of the method to call for each field
+                $this->$methodSet($request->get($fieldName,null));
+            }
+        }
+
+        $this->setLink($filename);
+        $this->setOriginalName($originalName);
+        return 1;
     }
 
-    /**
-     * Metadata constructor.
-     * @param string $title
-     * @param string $subject
-     * @param string $description
-     * @param \DateTime $refDate
-     * @param \DateTime $publicationDate
-     * @param string $type
-     * @param string $link
-     */
-
-    /**
-     * Set originalName
-     *
-     * @param string $originalName
-     *
-     * @return Metadata
-     */
-    public function setOriginalName($originalName)
+    public function editEntity($request, $controller)
     {
-        $this->originalName = $originalName;
+        $metadata = $controller->getManager()->getClassMetadata('ExtendedDocument\APIBundle\Entity\Metadata');
 
-        return $this;
-    }
-
-    /**
-     * Get originalName
-     *
-     * @return string
-     */
-    public function getOriginalName()
-    {
-        return $this->originalName;
+        foreach ($metadata->getFieldNames() as $key => $fieldName){
+            if($fieldName != 'id' && $request->get($fieldName,null) != null){
+                $methodSet = 'set'.ucfirst($fieldName); //contains the name of the method to call for each field
+                $this->$methodSet($request->get($fieldName,null));
+            }
+        }
     }
 }

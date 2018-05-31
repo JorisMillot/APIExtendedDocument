@@ -11,7 +11,7 @@ use JsonSerializable;
  * @ORM\Table(name="document")
  * @ORM\Entity(repositoryClass="ExtendedDocument\APIBundle\Repository\DocumentRepository")
  */
-class Document implements JsonSerializable
+class Document implements JsonSerializable, DoctrineEntity
 {
     /**
      * @var int
@@ -34,12 +34,12 @@ class Document implements JsonSerializable
     }
 
     /**
-     * @ORM\OneToOne(targetEntity="Metadata", inversedBy="document", fetch="EAGER")
+     * @ORM\OneToOne(targetEntity="Metadata", inversedBy="document", fetch="EAGER", cascade={"persist"})
      */
     private $metadata;
 
     /**
-     * @ORM\OneToOne(targetEntity="Visualization", inversedBy="document", fetch="EAGER")
+     * @ORM\OneToOne(targetEntity="Visualization", inversedBy="document", fetch="EAGER", cascade={"persist"})
      */
     private $visualization;
 
@@ -102,8 +102,59 @@ class Document implements JsonSerializable
     {
         return [
             'idDocument' => $this->getId(),
-          'metadata' => $this->getMetadata()->jsonSerialize(),
-          'visualization' => $this->getVisualization()->jsonSerialize()
+            'metadata' => $this->getMetadata()->jsonSerialize(),
+            'visualization' => $this->getVisualization()->jsonSerialize()
         ];
+    }
+
+    public function initEntity($request, $controller)
+    {
+
+        $metadata = $controller->getManager()->getClassMetadata('ExtendedDocument\APIBundle\Entity\Document');
+
+        foreach ($metadata->getFieldNames() as $key => $fieldName){
+            //If the field is required and the field is not provided we return an error 400 : Bad Request
+            if($fieldName != 'id' && !$metadata->isNullable($fieldName) && $request->get($fieldName,null) == null){
+                return 'Error : Some parameters are missings : '.$fieldName;
+            }
+            if($fieldName != 'id'){
+                $methodSet = 'set'.ucfirst($fieldName); //contains the name of the method to call for each field
+                $this->$methodSet($request->get($fieldName,null));
+            }
+        }
+
+        foreach ($metadata->associationMappings as $key => $value) {
+            $methodGet = 'get'.ucfirst($key);
+            $methodSet = 'set'.ucfirst($key); //contains the name of the method set
+            if (gettype($this->$methodGet() == 'object')) {
+                $newObject = new $value['targetEntity']();
+                $newObject->initEntity($request,$controller);
+                $this->$methodSet($newObject);
+            }
+        }
+    }
+
+    public function editEntity($request, $controller)
+    {
+        $metadata = $controller->getManager()->getClassMetadata('ExtendedDocument\APIBundle\Entity\Document');
+
+        foreach ($metadata->getFieldNames() as $key => $fieldName){
+            if($fieldName != 'id'){
+                $methodSet = 'set'.ucfirst($fieldName); //contains the name of the method to call for each field
+                $this->$methodSet($request->get($fieldName,null));
+            }
+        }
+
+        foreach ($metadata->associationMappings as $key => $value) {
+            $methodGet = 'get'.ucfirst($key);
+            $methodSet = 'set'.ucfirst($key); //contains the name of the method set
+            /**
+             * @var $object DoctrineEntity
+             */
+            if (gettype($this->$methodGet() == 'object')) {
+                $object = $this->$methodGet();
+                $object->editEntity($request,$controller);
+            }
+        }
     }
 }

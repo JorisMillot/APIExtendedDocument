@@ -4,6 +4,8 @@ namespace ExtendedDocument\APIBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use JsonSerializable;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Tests\Controller;
 
 /**
  * Visualization
@@ -11,7 +13,7 @@ use JsonSerializable;
  * @ORM\Table(name="visualization")
  * @ORM\Entity(repositoryClass="ExtendedDocument\APIBundle\Repository\VisualizationRepository")
  */
-class Visualization implements JsonSerializable
+class Visualization implements JsonSerializable, DoctrineEntity
 {
     /**
      * @var int
@@ -294,5 +296,42 @@ class Visualization implements JsonSerializable
                 $arrayJson[$key] = $value;
         }
         return $arrayJson;
+    }
+
+    /**
+     * @param $request Request
+     * @param $controller mixed
+     * @return String|int
+     */
+    public function initEntity($request, $controller){
+        if($request == null)
+            return 'Error : request wasn\'t provided';
+
+        $metadata = $controller->getManager()->getClassMetadata('ExtendedDocument\APIBundle\Entity\Visualization');
+
+        foreach ($metadata->getFieldNames() as $key => $fieldName){
+            //If the field is required and the field is not provided we return an error 400 : Bad Request
+            if($fieldName != 'id' && !$metadata->isNullable($fieldName) && $request->get($fieldName,null) == null){
+                return 'Error : Some parameters are missings : '.$fieldName;
+            }
+            if($fieldName != 'id'){
+                $methodSet = 'set'.ucfirst($fieldName); //contains the name of the method to call for each field
+                $this->$methodSet($request->get($fieldName,null));
+            }
+        }
+
+        return 1;
+    }
+
+    public function editEntity($request, $controller)
+    {
+        $metadata = $controller->getManager()->getClassMetadata('ExtendedDocument\APIBundle\Entity\Visualization');
+
+        foreach ($metadata->getFieldNames() as $key => $fieldName){
+            if($fieldName != 'id'){
+                $methodSet = 'set'.ucfirst($fieldName); //contains the name of the method to call for each field
+                $this->$methodSet($request->get($fieldName,null));
+            }
+        }
     }
 }
