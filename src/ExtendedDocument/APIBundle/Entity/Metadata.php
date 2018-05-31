@@ -368,7 +368,7 @@ class Metadata implements JsonSerializable, DoctrineEntity
         $file = $request->files->get('link');
 
         if(!isset($file)){
-            return new Response('Error : no file given', Response::HTTP_BAD_REQUEST);
+            return 'Error : no file given';
         }
         if (!$file->isValid()){
             return new Response($file->getErrorMessage(), Response::HTTP_BAD_REQUEST);
