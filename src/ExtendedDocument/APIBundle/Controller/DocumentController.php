@@ -23,7 +23,9 @@ class DocumentController extends Controller
         $em = $this->getDoctrine()->getManager();
 
         $newDocument = new Document();
-        $newDocument->initEntity($request,$this);
+        if(($response = $newDocument->initEntity($request,$this)) != 1){
+            return new Response($response, Response::HTTP_BAD_REQUEST);
+        }
 
         $em->persist($newDocument);
         $em->flush();

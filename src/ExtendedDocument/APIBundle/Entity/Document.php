@@ -128,10 +128,14 @@ class Document implements JsonSerializable, DoctrineEntity
             $methodSet = 'set'.ucfirst($key); //contains the name of the method set
             if (gettype($this->$methodGet() == 'object')) {
                 $newObject = new $value['targetEntity']();
-                $newObject->initEntity($request,$controller);
+                if(($response = $newObject->initEntity($request,$controller)) != 1){
+                    return $response;
+                }
                 $this->$methodSet($newObject);
             }
         }
+
+        return 1;
     }
 
     public function editEntity($request, $controller)
