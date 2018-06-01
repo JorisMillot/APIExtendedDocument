@@ -53,16 +53,23 @@ class DocumentController extends Controller
         return new Response('OK');
     }
 
+    /**
+     * @param Request $request
+     * @param $idDocument
+     * @return Response
+     */
     public function deleteDocumentAction(Request $request, $idDocument){
         $em = $this->getDoctrine()->getManager();
         $documentRepository = $em->getRepository('ExtendedDocument\APIBundle\Entity\Document');
 
         //We check if the document exists.
+        /**
+         * @var $document Document
+         */
         if(($document = $documentRepository->find($idDocument,null)) == null){
             return new Response('Error : unknown document',Response::HTTP_NOT_FOUND);
         }
-        $em->remove($document->getMetadata());
-        $em->remove($document->getVisualization());
+        unlink($this->container->get('kernel')->getProjectDir().'/web/documentsDirectory/'.$document->getMetadata()->getLink());
         $em->remove($document);
         $em->flush();
 
