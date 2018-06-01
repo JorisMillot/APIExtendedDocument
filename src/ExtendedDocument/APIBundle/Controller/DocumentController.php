@@ -278,6 +278,10 @@ class DocumentController extends Controller
         return $this->getDoctrine()->getManager();
     }
 
+    public function getKernel(){
+        return $this->container->get('kernel');
+    }
+
     //Only for developpement : display the database
     public function displayDocumentsAction(Request $request){
         $em = $this->getDoctrine()->getManager();

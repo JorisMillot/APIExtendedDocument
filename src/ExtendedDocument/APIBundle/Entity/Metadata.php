@@ -8,6 +8,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\HttpKernel;
 
 /**
  * Metadata
@@ -381,8 +382,11 @@ class Metadata implements JsonSerializable, DoctrineEntity
             $filename = $filekey . '.' . $file->getClientOriginalExtension();
 
             //Copie du fichier sur le serveur
-            $file->move(__DIR__.'../../../../../web/documentsDirectory',$filename);
-            //echo __DIR__.'../../web/documentsDirectory';
+            /**
+             * @var $kernel \Symfony\Component\HttpKernel\Kernel
+             */
+            $kernel = $controller->getKernel();
+            $file->move($kernel->getProjectDir().'/web/documentsDirectory',$filename);
         }
 
         $metadata = $controller->getManager()->getClassMetadata('ExtendedDocument\APIBundle\Entity\Metadata');
