@@ -16,4 +16,4 @@
 /vendor/
 /web/bundles/
 /.idea
-/web/documentsDirectory
+/web/documentsDirectory/*
