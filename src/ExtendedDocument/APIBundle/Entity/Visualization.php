@@ -328,7 +328,7 @@ class Visualization implements JsonSerializable, DoctrineEntity
         $metadata = $controller->getManager()->getClassMetadata('ExtendedDocument\APIBundle\Entity\Visualization');
 
         foreach ($metadata->getFieldNames() as $key => $fieldName){
-            if($fieldName != 'id'){
+            if($fieldName != 'id' && $request->get($fieldName,null) != null){
                 $methodSet = 'set'.ucfirst($fieldName); //contains the name of the method to call for each field
                 $this->$methodSet($request->get($fieldName,null));
             }
