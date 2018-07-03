@@ -95,6 +95,7 @@ class DocumentController extends Controller
         $em = $this->getDoctrine()->getManager();
         $documentRepository = $em->getRepository('ExtendedDocument\APIBundle\Entity\Document');
 
+
         if($request->get('refDate1','0000-01-01') != null ||
             $request->get('publicationDate1','0000-01-01') != null){
             //at least one date was provided
@@ -103,7 +104,7 @@ class DocumentController extends Controller
             //reference date
             $refDate1 = $request->get('refDate1','0001-01-01');
             if($request->get('refDate1',null) == null)
-                //no publication date was provided
+                //no reference date was provided
                 $refDate2 = '9999-12-31';
             else
                 $refDate2 = $request->get('refDate2',$refDate1);
@@ -114,7 +115,8 @@ class DocumentController extends Controller
                 //no publication date was provided
                 $publicationDate2 = '9999-12-31';
             else
-                $publicationDate2 = $request->get('publicationDate2',$refDate1);
+                $publicationDate2 = $request->get('publicationDate2', $publicationDate1);
+
 
             $qb->select('d,m,v')
                 ->from('ExtendedDocument\APIBundle\Entity\Document', 'd')
@@ -165,7 +167,7 @@ class DocumentController extends Controller
             //A keyword was provided
             $documentsFiltered = array();
             foreach ($documents as $document){
-                if(substr_count($document->getMetadata()->toStringForKeywordFilter(),$keyword)>0){
+                if(substr_count(strtolower($document->getMetadata()->toStringForKeywordFilter()),strtolower($keyword))>0){
                     array_push($documentsFiltered,$document);
                 }
             }
