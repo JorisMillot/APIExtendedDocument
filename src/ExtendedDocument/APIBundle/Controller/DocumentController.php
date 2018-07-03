@@ -96,27 +96,34 @@ class DocumentController extends Controller
         $documentRepository = $em->getRepository('ExtendedDocument\APIBundle\Entity\Document');
 
 
-        if($request->get('refDate1','0000-01-01') != null ||
-            $request->get('publicationDate1','0000-01-01') != null){
+        if($request->get('refDate1',null) != null ||
+            $request->get('refDate2',null) != null ||
+            $request->get('publicationDate1',null) != null ||
+            $request->get('publicationDate2',null) != null){
             //at least one date was provided
             $qb = $em->createQueryBuilder();
 
-            //reference date
+            /*Old way to select with a date
+             * //reference date
             $refDate1 = $request->get('refDate1','0001-01-01');
             if($request->get('refDate1',null) == null)
                 //no reference date was provided
-                $refDate2 = '9999-12-31';
+                $refDate2 = $request->get('refDate2','9999-12-31');
             else
                 $refDate2 = $request->get('refDate2',$refDate1);
 
             //publication date
-            $publicationDate1 = $request->get('$publicationDate1','0001-01-01');
-            if($request->get('$publicationDate1',null) == null)
+            $publicationDate1 = $request->get('publicationDate1','0001-01-01');
+            if($request->get('publicationDate1',null) == null)
                 //no publication date was provided
-                $publicationDate2 = '9999-12-31';
+                $publicationDate2 = $request->get('publicationDate2','9999-12-31');
             else
-                $publicationDate2 = $request->get('publicationDate2', $publicationDate1);
+                $publicationDate2 = $request->get('publicationDate2', $publicationDate1);*/
 
+            $refDate1 = $request->get('refDate1','0001-01-01');
+            $refDate2 = $request->get('refDate2','9999-12-31');
+            $publicationDate1 = $request->get('publicationDate1','0001-01-01');
+            $publicationDate2 = $request->get('publicationDate2','9999-12-31');
 
             $qb->select('d,m,v')
                 ->from('ExtendedDocument\APIBundle\Entity\Document', 'd')
